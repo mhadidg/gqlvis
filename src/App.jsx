@@ -1,5 +1,6 @@
 import ScopeEditor from './components/ScopeEditor.jsx'
 import React from 'react'
+import LocalCache from './local-cache.js'
 import buildQuery from './query-builder.js'
 import makeNode from './make-node.js'
 
@@ -140,15 +141,29 @@ function useIntrospection (endpoint) {
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
+  // Backed by localStorage
+  const CACHE_TTL = 24 * 60 * 60 * 1000
+  const typeCache = useRef(new LocalCache(`types:${endpoint}`))
+
+  useEffect(() => {
+    typeCache.current = new LocalCache(`types:${endpoint}`)
+  }, [endpoint])
+
   const loadRoot = async () => {
     setError(null)
     setLoading(true)
+
     try {
-      const data = await gqlFetch(endpoint, INTROSPECT_ROOT)
-      // noinspection JSUnresolvedReference
-      const name = data?.__schema?.queryType?.name // root object, typically "Query"
-      if (!name) { // noinspection ExceptionCaughtLocallyJS
-        throw new Error('No queryType name in schema')
+      let name = typeCache.current.get('rootName')
+      if (!name) {
+        const data = await gqlFetch(endpoint, INTROSPECT_ROOT)
+        // noinspection JSUnresolvedReference
+        name = data?.__schema?.queryType?.name // root object, typically "Query"
+        if (!name) { // noinspection ExceptionCaughtLocallyJS
+          throw new Error('No queryType name in schema')
+        }
+
+        typeCache.current.set('rootName', name, CACHE_TTL)
       }
 
       setQueryRootName(name)
@@ -159,9 +174,8 @@ function useIntrospection (endpoint) {
     }
   }
 
-  const typeCache = useRef(new Map())
   const loadType = async (name) => {
-    if (!name || typeCache.current.has(name)) {
+    if (typeCache.current.has(name)) {
       return typeCache.current.get(name)
     }
 
@@ -169,7 +183,7 @@ function useIntrospection (endpoint) {
     // noinspection JSUnresolvedReference
     const simplified = simplifyObjectType(data?.__type)
     if (simplified) {
-      typeCache.current.set(name, simplified)
+      typeCache.current.set(name, simplified, CACHE_TTL)
     }
 
     return simplified
@@ -279,4 +293,3 @@ function App () {
 }
 
 export default App
-
