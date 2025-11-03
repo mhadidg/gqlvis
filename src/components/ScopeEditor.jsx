@@ -30,14 +30,10 @@ function ScopeEditor ({ loadType, typeName, node, onChange }) {
   const [type, setType] = useState()
 
   useEffect(() => {
-    let mounted = true;
     (async () => {
-      let type = await loadType(typeName)
-      if (mounted) setType(type) // trigger re-render
+      setType(await loadType(typeName))
     })()
-
-    return () => { mounted = false }
-  })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // noinspection JSUnresolvedReference
   if (!type || !type.fields) {
