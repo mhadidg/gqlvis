@@ -221,19 +221,19 @@ function App () {
   }, [queryRootName])
 
   useEffect(() => {
-    if (!rootField || !queryRootName) return
+    if (!rootField) return
 
     const rootType = getType(queryRootName)
     if (!rootType) return
 
     const rootDef = rootType.fields[rootField]
     if (rootDef) setSelection(makeNode(rootDef.type, rootDef.args || {}))
-  }, [rootField, queryRootName])
+  }, [rootField])
 
   const graphQL = useMemo(() => {
-    if (!selection || !rootField) return ''
+    if (!selection) return ''
     return buildQuery(rootField, selection, getType)
-  }, [selection, rootField])
+  }, [selection])
 
   return ( //
     <div className="mx-auto max-w-4xl p-4 text-gray-900">
