@@ -33,7 +33,7 @@ function ScopeEditor ({ loadType, typeName, node, onChange }) {
     (async () => {
       setType(await loadType(typeName))
     })()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [typeName]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // noinspection JSUnresolvedReference
   if (!type || !type.fields) {
