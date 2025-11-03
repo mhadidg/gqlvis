@@ -26,7 +26,7 @@ function Chip ({ children, onRemove }) {
     </span>)
 }
 
-function ScopeEditor ({ loadType, typeName, node, onChange }) {
+function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
   const [type, setType] = useState()
 
   useEffect(() => {
@@ -118,7 +118,20 @@ function ScopeEditor ({ loadType, typeName, node, onChange }) {
 
   return ( //
     <div className="mt-3 rounded-lg border p-3">
-      <div className="text-sm font-medium">In <span className="font-mono">{typeName}</span></div>
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-medium">
+          In <span className="font-mono">{typeName}</span>
+        </div>
+
+        {typeof onRemove === 'function' && ( //
+          <button
+            onClick={onRemove}
+            className="rounded-full px-2 py-1 text-xs hover:bg-gray-50"
+            aria-label="Remove scope"
+            title="Remove">
+            remove
+          </button>)}
+      </div>
 
       {/* Variables */}
       <div className="mt-2">
@@ -163,22 +176,12 @@ function ScopeEditor ({ loadType, typeName, node, onChange }) {
       {!!node.children.length && ( //
         <div className="mt-3 space-y-3">
           {node.children.map((child, i) => ( //
-            <div key={`${child.field}_${i}`} className="rounded-lg border p-2">
-              <div className="mb-2 flex items-center justify-between text-sm">
-                <div>from <Chip>{child.field}</Chip></div>
-                <button
-                  onClick={() => removeChild(i)}
-                  className="rounded-full px-2 py-1 text-xs hover:bg-gray-50"
-                > remove
-                </button>
-              </div>
-
-              <ScopeEditor
-                loadType={loadType}
-                typeName={child.node.typeName}
-                node={child.node}
-                onChange={(nn) => updateChild(i, nn)}/>
-            </div>))}
+            <ScopeEditor
+              loadType={loadType}
+              typeName={child.node.typeName}
+              node={child.node}
+              onChange={(nn) => updateChild(i, nn)}
+              onRemove={() => removeChild(i)}/>))}
         </div>)}
     </div>)
 }
