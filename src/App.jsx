@@ -241,14 +241,12 @@ function App () {
 
       {/* Endpoint */}
       <div className="mb-4 rounded-xl border bg-white p-3">
-        <div className="mb-2 text-sm text-gray-500">GraphQL Endpoint</div>
+        <div className="mb-2 text-sm">GraphQL Endpoint</div>
         <input
           className="w-full rounded border px-2 py-1 text-sm"
           value={endpoint}
           onChange={(e) => setEndpoint(e.target.value)}
           placeholder="https://your.graphql.endpoint/"/>
-
-        <div className="mt-2 text-xs text-gray-500">Using minimal lazy introspection.</div>
 
         {loading && <div className="mt-2 text-xs text-gray-400">Loading schema…</div>}
         {error && <div className="mt-2 text-xs text-red-600">{String(error)}</div>}
@@ -285,7 +283,7 @@ function App () {
 
       {/* Output */}
       <div className="mb-4 rounded-xl border bg-white p-3">
-        <div className="mb-2 text-sm text-gray-500">GraphQL</div>
+        <div className="mb-2 text-sm">Query</div>
         <pre
           className="max-h-96 overflow-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs leading-relaxed">{graphQL}</pre>
       </div>

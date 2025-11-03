@@ -18,7 +18,7 @@ function clone (node) {
 
 function Chip ({ children, onRemove }) {
   return ( //
-    <span className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-sm">
+    <span className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-sm bg-gray-50">
       {children}
       {onRemove && ( //
         <button onClick={onRemove} className="ml-1 rounded-full px-1 hover:bg-gray-100">×</button> //
@@ -120,7 +120,7 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
     <div className="mt-3 rounded-lg border p-3">
       <div className="flex items-center justify-between">
         <div className="text-sm font-medium">
-          In <span className="font-mono">{typeName}</span>
+          In <span className="font-mono font-semibold">{typeName}</span>
         </div>
 
         {typeof onRemove === 'function' && ( //
@@ -135,7 +135,7 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
 
       {/* Variables */}
       <div className="mt-2">
-        <div className="text-xs text-gray-500">Variables</div>
+        <div className="text-sm mb-1">Variables</div>
         <SearchAdd placeholder="Type to search" options={argOptions} selected={node.vars} onSelect={addVar}/>
 
         <div className="mt-2 flex flex-wrap gap-2">
@@ -147,7 +147,7 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
 
       {/* Include fields */}
       <div className="mt-3">
-        <div className="text-xs text-gray-500">Include Fields</div>
+        <div className="text-sm mb-1">Include Fields</div>
         <SearchAdd placeholder="Type to search" options={scalarFields} selected={node.scalars} onSelect={addField}/>
 
         <div className="mt-2 flex flex-wrap gap-2">
@@ -159,7 +159,7 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
 
       {/* Traverse */}
       <div className="mt-3">
-        <div className="text-xs text-gray-500">Traverse</div>
+        <div className="text-sm">Traverse</div>
         <div className="mt-1 flex flex-wrap gap-2">
           {objectFields.map((of) => { //
             const isDisabled = added.has(of.name)

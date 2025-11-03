@@ -21,7 +21,7 @@ function SearchAdd ({ placeholder, options, selected, onSelect }) {
   return ( //
     <div>
       <input
-        className="w-full rounded border px-2 py-1 text-sm"
+        className={'w-full rounded border px-2 py-1 text-sm' + (shouldBeDisabled ? ' bg-gray-50' : '')}
         value={query}
         placeholder={shouldBeDisabled ? (selected.size > 0 ? 'Nothing left to select' : 'Nothing to select') : placeholder}
         onChange={(e) => setQuery(e.target.value)}
