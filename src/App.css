@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/* default border color */
+@layer base {
+  *, ::before, ::after {
+    border-color: theme('colors.gray.300');
+  }
+}
+
+@layer base {
+  [role=button], button {
+    @apply cursor-pointer;
+  }
+}
