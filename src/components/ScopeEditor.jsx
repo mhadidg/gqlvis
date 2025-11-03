@@ -28,6 +28,7 @@ function Chip ({ children, onRemove }) {
 
 function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
   const [type, setType] = useState()
+  const added = new Set(node.children.map((c) => c.field))
 
   useEffect(() => {
     (async () => {
@@ -85,6 +86,8 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
   }
 
   const addChild = async (fieldName) => {
+    if (added.has(fieldName)) return
+
     const fieldDef = type.fields[fieldName]
     if (!fieldDef) return
 
@@ -93,14 +96,11 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
     const childArgsDef = fieldDef.args || {}
 
     next.children = [...next.children, {
-      field: fieldName, //
-      kind: fieldDef.kind, //
-      node: makeNode(fieldDef.type, childArgsDef)
+      field: fieldName, kind: fieldDef.kind, node: makeNode(fieldDef.type, childArgsDef)
     }]
 
     onChange(next)
   }
-
   const updateChild = (idx, newNode) => {
     const next = clone(node)
     next.children = //
@@ -161,13 +161,16 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
       <div className="mt-3">
         <div className="text-xs text-gray-500">Traverse</div>
         <div className="mt-1 flex flex-wrap gap-2">
-          {objectFields.map((of) => ( //
-            <button
-              className="rounded-full border px-2 py-1 text-sm hover:bg-gray-50"
-              onClick={() => addChild(of.name)}
-              key={of.name}
-            >+ {of.name}</button> //
-          ))}
+          {objectFields.map((of) => { //
+            const isDisabled = added.has(of.name)
+            return ( //
+              <button
+                key={of.name}
+                disabled={isDisabled}
+                className={`rounded-full border px-2 py-1 text-sm ` + (isDisabled ? 'bg-gray-50' : 'hover:bg-gray-50')}
+                onClick={() => addChild(of.name)}
+              >+ {of.name}</button>)
+          })}
 
           {!objectFields.length && <span className="text-xs text-gray-400">(no object/list fields)</span>}
         </div>
