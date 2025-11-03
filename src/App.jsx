@@ -205,7 +205,7 @@ function App () {
     (async () => {
       await loadRoot()
     })()
-  }, [endpoint])
+  }, [endpoint]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     (async () => {
@@ -218,7 +218,7 @@ function App () {
       const rootField = rootFields[0]
       setRootField(rootField)
     })()
-  }, [queryRootName])
+  }, [queryRootName]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!rootField) return
@@ -228,12 +228,12 @@ function App () {
 
     const rootDef = rootType.fields[rootField]
     if (rootDef) setSelection(makeNode(rootDef.type, rootDef.args || {}))
-  }, [rootField])
+  }, [rootField]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const graphQL = useMemo(() => {
     if (!selection) return ''
     return buildQuery(rootField, selection, getType)
-  }, [selection])
+  }, [selection]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return ( //
     <div className="mx-auto max-w-4xl p-4 text-gray-900">
