@@ -1,14 +1,12 @@
 function buildQuery (rootField, node, getType) {
-  const rootPath = [rootField]
-
-  const vars = collectVars(node, rootPath)
+  const vars = collectVars(node, [])
   const varDecl = vars.length ? `(${vars.map(v => `$${v.name}: ${v.type}`).join(', ')})` : ''
 
   const args = [...node.vars]
-    .map(arg => `${arg}: $${makeVarName(rootPath, arg)}`)
+    .map(arg => `${arg}: $${makeVarName([], arg)}`)
     .join(', ')
 
-  let fields = buildFields(getType, node.typeName, node, rootPath)
+  let fields = buildFields(getType, node.typeName, node, [])
   return prettyPrint(`query${varDecl}{${rootField}${(args ? `(${args})` : '')}{${fields}}}`)
 }
 
