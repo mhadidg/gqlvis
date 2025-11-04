@@ -67,7 +67,12 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
     onChange(next)
   }
 
+  const isRequiredArg = (node, name) => {
+    return node.argsDef[name]?.type?.endsWith('!') === true
+  }
+
   const remVar = (vari) => {
+    if (isRequiredArg(node, vari)) return
     const next = clone(node)
     next.vars.delete(vari)
     onChange(next)
@@ -101,6 +106,7 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
 
     onChange(next)
   }
+
   const updateChild = (idx, newNode) => {
     const next = clone(node)
     next.children = //
@@ -139,9 +145,14 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
         <SearchAdd placeholder="Type to search" options={argOptions} selected={node.vars} onSelect={addVar}/>
 
         <div className="mt-2 flex flex-wrap gap-2">
-          {Array.from(node.vars).map((vari) => ( //
-            <Chip key={vari} onRemove={() => remVar(vari)}>{vari}</Chip> //
-          ))}
+          {Array.from(node.vars).map((vari) => {
+            const required = isRequiredArg(node, vari)
+            return ( //
+              <Chip key={vari} onRemove={required ? undefined : () => remVar(vari)}>
+                {vari}
+                {required && <span className="ml-1 text-[10px] text-gray-500" title="Required">req</span>}
+              </Chip>)
+          })}
         </div>
       </div>
 
