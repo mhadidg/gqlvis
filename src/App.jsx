@@ -231,9 +231,9 @@ function App () {
   }, [rootField]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const graphQL = useMemo(() => {
-    if (!selection) return ''
+    if (!selection || loading || error) return ''
     return buildQuery(rootField, selection, getType)
-  }, [selection]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selection, loading, error]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return ( //
     <div className="mx-auto max-w-4xl p-4 text-gray-900">
@@ -282,11 +282,12 @@ function App () {
         </div>)}
 
       {/* Output */}
-      <div className="mb-4 rounded-xl border bg-white p-3">
-        <div className="mb-2 text-sm">Query</div>
-        <pre
-          className="max-h-96 overflow-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs leading-relaxed">{graphQL}</pre>
-      </div>
+      {graphQL && ( //
+        <div className="mb-4 rounded-xl border bg-white p-3">
+          <div className="mb-2 text-sm">Query</div>
+          <pre
+            className="max-h-96 overflow-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs leading-relaxed">{graphQL}</pre>
+        </div>)}
     </div>)
 }
 
