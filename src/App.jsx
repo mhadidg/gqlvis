@@ -14,9 +14,25 @@ const LIST_SCALAR = 'LIST_SCALAR' // pseudo-kind
 const LIST_OBJECT = 'LIST_OBJECT' // pseudo-kind
 
 async function gqlFetch (url, query, variables) {
-  const res = await fetch(url, {
+  const urlObj = new URL(url)
+  const headers = { 'content-type': 'application/json' }
+
+  if (urlObj.username) {
+    if (urlObj.username.toLowerCase() === 'bearer') {
+      headers.Authorization = `Bearer ${urlObj.password}`
+    } else {
+      const basic = btoa(`${urlObj.username}:${urlObj.password}`)
+      headers.Authorization = `Basic ${basic}`
+    }
+
+    // Clear username/password from URL
+    urlObj.username = ''
+    urlObj.password = ''
+  }
+
+  const res = await fetch(urlObj.toString(), {
     method: 'POST', //
-    headers: { 'content-type': 'application/json' }, //
+    headers, //
     body: JSON.stringify({ query, variables }),
   })
 
@@ -145,10 +161,19 @@ function useIntrospection (endpoint) {
 
   // Backed by localStorage
   const CACHE_TTL = 24 * 60 * 60 * 1000
-  const typeCache = useRef(new LocalCache(`types:${endpoint}`))
+  const typeCache = useRef(null)
 
   useEffect(() => {
-    typeCache.current = new LocalCache(`types:${endpoint}`)
+    let url
+    try {
+      url = new URL(endpoint)
+    } catch {return}
+
+    // Remove auth info from URL
+    url.username = ''
+    url.password = ''
+
+    typeCache.current = new LocalCache(`types:${url.toString()}`)
   }, [endpoint])
 
   const loadRoot = async () => {
@@ -249,6 +274,17 @@ function App () {
           value={endpoint}
           onChange={(e) => setEndpoint(e.target.value)}
           placeholder="https://your.graphql.endpoint/"/>
+
+        <div className="mt-2 text-xs text-gray-500">
+          You can pass auth info in the URL:<br/>
+          - Basic auth: <span className="font-mono">https://user:pass@example.com/graphql</span><br/>
+          - Bearer token: <span className="font-mono">https://bearer:TOKEN@example.com/graphql</span>
+        </div>
+
+        <div className="mt-1 text-xs text-gray-500">
+          ⚠️ Your URL (including auth info) never leaves your browser.
+          The app runs client-side only and doesn’t transmit data anywhere external.
+        </div>
 
         {loading && <div className="mt-2 text-xs text-gray-400">Loading schema…</div>}
         {error && <div className="mt-2 text-xs text-red-600">{String(error)}</div>}
