@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+
 import ScopeEditor from './components/ScopeEditor.jsx'
 import React from 'react'
 import LocalCache from './local-cache.js'
@@ -205,7 +207,7 @@ function App () {
     (async () => {
       await loadRoot()
     })()
-  }, [endpoint]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [endpoint])
 
   useEffect(() => {
     (async () => {
@@ -218,7 +220,7 @@ function App () {
       const rootField = rootFields[0]
       setRootField(rootField)
     })()
-  }, [queryRootName]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [queryRootName])
 
   useEffect(() => {
     if (!rootField) return
@@ -228,12 +230,12 @@ function App () {
 
     const rootDef = rootType.fields[rootField]
     if (rootDef) setSelection(makeNode(rootDef.type, rootDef.args || {}))
-  }, [rootField]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [rootField])
 
   const graphQL = useMemo(() => {
     if (!selection || loading || error) return ''
     return buildQuery(rootField, selection, getType)
-  }, [selection, loading, error]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selection, loading, error])
 
   return ( //
     <div className="mx-auto max-w-4xl p-4 text-gray-900">
