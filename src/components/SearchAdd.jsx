@@ -32,7 +32,7 @@ function SearchAdd ({ placeholder, options, selected, onSelect }) {
 
       {(query || focused) && matches.length > 0 && ( //
         <div className="mt-1 rounded border bg-white">
-          {matches.slice(0, 6).map((match) => ( //
+          {matches.slice(0, query === '' ? 5 : 10).map((match) => ( //
             <div
               className="cursor-pointer px-2 py-1 text-sm hover:bg-gray-50"
               key={match.name}
