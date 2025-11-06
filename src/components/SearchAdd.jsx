@@ -12,8 +12,8 @@ function SearchAdd ({ placeholder, options, selected, onSelect }) {
 
   const shouldBeDisabled = (query === '' && matches.length === 0)
 
-  // Reset focus when input is disabled
-  // Specifically for "Nothing left to select"
+  // Reset focus when input is disabled`
+  // Specifically for "None left to select"
   useEffect(() => {
     if (shouldBeDisabled) setFocus(false)
   }, [shouldBeDisabled])
@@ -23,7 +23,7 @@ function SearchAdd ({ placeholder, options, selected, onSelect }) {
       <input
         className={'w-full rounded border px-2 py-1 text-sm' + (shouldBeDisabled ? ' bg-gray-50' : '')}
         value={query}
-        placeholder={shouldBeDisabled ? (selected.size > 0 ? 'Nothing left to select' : 'Nothing to select') : placeholder}
+        placeholder={shouldBeDisabled ? (selected.size > 0 ? 'None left to select' : 'None to select') : placeholder}
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => setFocus(true)}
         onBlur={() => setFocus(false)}

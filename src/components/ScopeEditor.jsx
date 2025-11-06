@@ -140,9 +140,9 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
           </button>)}
       </div>
 
-      {/* Variables */}
+      {/* Arguments */}
       <div className="mt-2">
-        <div className="text-sm mb-1">Variables</div>
+        <div className="text-sm mb-1">Arguments</div>
         <SearchAdd placeholder="Type to search" options={argOptions} selected={node.vars} onSelect={addVar}/>
 
         <div className="mt-2 flex flex-wrap gap-2">
@@ -157,9 +157,9 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
         </div>
       </div>
 
-      {/* Include fields */}
+      {/* Scalar fields */}
       <div className="mt-3">
-        <div className="text-sm mb-1">Include Fields</div>
+        <div className="text-sm mb-1">Scalar fields</div>
         <SearchAdd placeholder="Type to search" options={scalarFields} selected={node.scalars} onSelect={addField}/>
 
         <div className="mt-2 flex flex-wrap gap-2">
@@ -169,9 +169,9 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
         </div>
       </div>
 
-      {/* Traverse */}
+      {/* Object fields */}
       <div className="mt-3">
-        <div className="text-sm">Traverse</div>
+        <div className="text-sm">Object fields</div>
         <div className="mt-1 flex flex-wrap gap-2">
           {objectFields.map((of) => { //
             const isDisabled = added.has(of.name)
