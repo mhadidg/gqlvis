@@ -220,6 +220,12 @@ function App () {
   const [rootField, setRootField] = useState('')
   const [selection, setSelection] = useState(null)
 
+  const selectableRootFields = (type) => {
+    const TypeDef = getType(type)
+    return Object.keys(TypeDef.fields)
+      .filter((field) => TypeDef.fields[field].kind.includes('OBJECT'))
+  }
+
   useEffect(() => {
     (async () => {
       if (!queryRootName.name) return
@@ -227,7 +233,9 @@ function App () {
       const rootType = await loadType(queryRootName.name)
       if (!rootType) return
 
-      const rootFields = Object.keys(rootType.fields || {})
+      const rootFields = selectableRootFields(queryRootName.name)
+      if (!rootFields.length) return
+
       const rootField = rootFields[0]
       setRootField(rootField)
     })()
@@ -252,7 +260,6 @@ function App () {
     <div className="mx-auto max-w-4xl p-4 text-gray-900">
       <h1 className="mb-3 text-2xl font-semibold">GraphQL Visual Builder</h1>
 
-      {/* Endpoint */}
       {/* Endpoint */}
       <div className="mb-4 rounded-xl border bg-white p-3">
         <div className="mb-2 text-sm">GraphQL Endpoint</div>
@@ -298,8 +305,8 @@ function App () {
               value={rootField}
               onChange={(e) => setRootField(e.target.value)}>
 
-              {Object.keys(getType(queryRootName.name).fields).map( //
-                (field) => (<option key={field} value={field}>{field}</option>)) //
+              {selectableRootFields(queryRootName.name) //
+                .map((field) => (<option key={field} value={field}>{field}</option>)) //
               }
             </select>
 
