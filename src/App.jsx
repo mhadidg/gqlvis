@@ -155,7 +155,7 @@ function buildTypeString (type) {
 }
 
 function useIntrospection (endpoint) {
-  const [queryRootName, setQueryRootName] = useState(null)
+  const [queryRootName, setQueryRootName] = useState({})
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -163,24 +163,16 @@ function useIntrospection (endpoint) {
   const CACHE_TTL = 24 * 60 * 60 * 1000
   const typeCache = useRef(null)
 
-  useEffect(() => {
-    let url
-    try {
-      url = new URL(endpoint)
-    } catch {return}
-
-    // Remove auth info from URL
-    url.username = ''
-    url.password = ''
-
-    typeCache.current = new LocalCache(`types:${url.toString()}`)
-  }, [endpoint])
-
   const loadRoot = async () => {
     setError(null)
     setLoading(true)
 
     try {
+      const cacheUrl = new URL(endpoint)
+      cacheUrl.username = ''
+      cacheUrl.password = ''
+      typeCache.current = new LocalCache(`types:${cacheUrl.toString()}`)
+
       let name = typeCache.current.get('rootName')
       if (!name) {
         const data = await gqlFetch(endpoint, INTROSPECT_ROOT)
@@ -193,7 +185,7 @@ function useIntrospection (endpoint) {
         typeCache.current.set('rootName', name, CACHE_TTL)
       }
 
-      setQueryRootName(name)
+      setQueryRootName({ name, endpoint })
     } catch (e) {
       setError(String(e))
     } finally {
@@ -216,7 +208,7 @@ function useIntrospection (endpoint) {
     return simplified
   }
 
-  const getType = (name) => typeCache.current.get(name)
+  const getType = (name) => typeCache.current?.get(name)
 
   return { queryRootName, loadRoot, loadType, getType, loading, error }
 }
@@ -230,15 +222,9 @@ function App () {
 
   useEffect(() => {
     (async () => {
-      await loadRoot()
-    })()
-  }, [endpoint])
+      if (!queryRootName.name) return
 
-  useEffect(() => {
-    (async () => {
-      if (!queryRootName) return
-
-      const rootType = await loadType(queryRootName)
+      const rootType = await loadType(queryRootName.name)
       if (!rootType) return
 
       const rootFields = Object.keys(rootType.fields || {})
@@ -250,7 +236,7 @@ function App () {
   useEffect(() => {
     if (!rootField) return
 
-    const rootType = getType(queryRootName)
+    const rootType = getType(queryRootName.name)
     if (!rootType) return
 
     const rootDef = rootType.fields[rootField]
@@ -258,22 +244,34 @@ function App () {
   }, [rootField])
 
   const graphQL = useMemo(() => {
-    if (!selection || loading || error) return ''
+    if (!selection || error) return ''
     return buildQuery(rootField, selection, getType)
-  }, [selection, loading, error])
+  }, [selection, error])
 
   return ( //
     <div className="mx-auto max-w-4xl p-4 text-gray-900">
       <h1 className="mb-3 text-2xl font-semibold">GraphQL Visual Builder</h1>
 
       {/* Endpoint */}
+      {/* Endpoint */}
       <div className="mb-4 rounded-xl border bg-white p-3">
         <div className="mb-2 text-sm">GraphQL Endpoint</div>
-        <input
-          className="w-full rounded border px-2 py-1 text-sm"
-          value={endpoint}
-          onChange={(e) => setEndpoint(e.target.value)}
-          placeholder="https://your.graphql.endpoint/"/>
+        <div className="flex gap-2">
+          <input
+            className="w-full rounded border px-2 py-1 text-sm"
+            value={endpoint}
+            onChange={(e) => setEndpoint(e.target.value)}
+            placeholder="https://your.graphql.endpoint/"/>
+
+          <button
+            type="button"
+            className="rounded border px-3 py-1 text-sm w-32 bg-gray-400 text-white font-medium disabled:opacity-50"
+            onClick={() => loadRoot()}
+            disabled={loading}
+          >
+            {loading ? 'Introspecting…' : 'Introspect'}
+          </button>
+        </div>
 
         <div className="mt-2 text-xs text-gray-500">
           You can pass auth info in the URL:<br/>
@@ -291,7 +289,7 @@ function App () {
       </div>
 
       {/* Root chooser & scope */}
-      {queryRootName && getType(queryRootName) && (//
+      {queryRootName.name && getType(queryRootName.name) && (//
         <div className="mb-4 rounded-xl border bg-white p-3">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span className="text-sm">Root field:</span>
@@ -300,12 +298,12 @@ function App () {
               value={rootField}
               onChange={(e) => setRootField(e.target.value)}>
 
-              {Object.keys(getType(queryRootName).fields).map( //
+              {Object.keys(getType(queryRootName.name).fields).map( //
                 (field) => (<option key={field} value={field}>{field}</option>)) //
               }
             </select>
 
-            <span className="text-xs text-gray-500">(Query type: {queryRootName})</span>
+            <span className="text-xs text-gray-500">(Query type: {queryRootName.name})</span>
           </div>
 
           {selection ? //
