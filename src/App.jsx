@@ -56,12 +56,12 @@ function useIntrospection (endpoint) {
 
       let name = typeCache.current.get('rootName')
       if (!name) {
+        /** @type {{ __schema: { queryType: { name: string }}}} */
         const data = await gqlFetch(endpoint, INTROSPECT_ROOT)
-        // noinspection JSUnresolvedReference
-        name = data?.__schema?.queryType?.name // root object, typically "Query"
-        if (!name) { // noinspection ExceptionCaughtLocallyJS
-          throw new Error('No queryType name in schema')
-        }
+
+        // root query type, typically "Query"
+        name = data.__schema.queryType.name
+        if (!name) throw new Error('No queryType name in schema')
 
         typeCache.current.set('rootName', name, CACHE_TTL)
       }
@@ -80,12 +80,10 @@ function useIntrospection (endpoint) {
       return typeCache.current.get(name)
     }
 
+    /** @type {{ __type: Object }} */
     const data = await gqlFetch(endpoint, INTROSPECT_TYPE, { name })
-    // noinspection JSUnresolvedReference
     const simplified = simplifyObjectType(data?.__type)
-    if (simplified) {
-      typeCache.current.set(name, simplified, CACHE_TTL)
-    }
+    if (simplified) typeCache.current.set(name, simplified, CACHE_TTL)
 
     return simplified
   }

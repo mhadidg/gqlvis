@@ -3,24 +3,24 @@ export const OBJECT = 'OBJECT'
 export const LIST_SCALAR = 'LIST_SCALAR' // pseudo-kind
 export const LIST_OBJECT = 'LIST_OBJECT' // pseudo-kind
 
-export async function gqlFetch (url, query, variables) {
-  const urlObj = new URL(url)
+export async function gqlFetch (urlStr, query, variables) {
+  const url = new URL(urlStr)
   const headers = { 'content-type': 'application/json' }
 
-  if (urlObj.username) {
-    if (urlObj.username.toLowerCase() === 'bearer') {
-      headers.Authorization = `Bearer ${urlObj.password}`
+  if (url.username) {
+    if (url.username.toLowerCase() === 'bearer') {
+      headers.Authorization = `Bearer ${url.password}`
     } else {
-      const basic = btoa(`${urlObj.username}:${urlObj.password}`)
+      const basic = btoa(`${url.username}:${url.password}`)
       headers.Authorization = `Basic ${basic}`
     }
 
     // Clear username/password from URL
-    urlObj.username = ''
-    urlObj.password = ''
+    url.username = ''
+    url.password = ''
   }
 
-  const res = await fetch(urlObj.toString(), {
+  const res = await fetch(url.toString(), {
     method: 'POST', //
     headers, //
     body: JSON.stringify({ query, variables }),
@@ -36,14 +36,17 @@ export async function gqlFetch (url, query, variables) {
   return json.data
 }
 
-// Unwrap a GraphQL type to its base type
-// Returns { namedKind, namedName, wrappers: ["NON_NULL"|"LIST", ...] }
+/**
+ * Unwrap a GraphQL type to its base type
+ * @param type {{ kind: *, name: *, ofType: { kind: *, name: *, ofType: Object} }}
+ * @returns {{namedKind: string, namedName: string, wrappers: string[]}}
+ */
 export function unwrap (type) {
   const wrappers = []
+
   let cur = type
   while (cur && (cur.kind === 'NON_NULL' || cur.kind === 'LIST')) {
     wrappers.push(cur.kind)
-    // noinspection JSUnresolvedReference
     cur = cur.ofType
   }
 
@@ -54,28 +57,14 @@ export function unwrap (type) {
   }
 }
 
-// Build a simplified shape for a type
-//
-// {
-//   kind: 'OBJECT',
-//   fields: {
-//     {name}: {
-//       kind: 'SCALAR', // or 'OBJECT' or 'LIST_OBJECT'
-//       type: 'String', // depends on kind (scalar or object)
-//       description: String, // short desc of the field
-//       args: {
-//         {name}: {
-//           type: 'String', // or any other scalar types
-//           description: String, // short desc of the argument
-//         }
-//       }
-//     }
-//   }
-// }
-//
+/**
+ * Simplify an object type
+ * @param type {{ kind: string, name: string, fields: Object[] }}
+ * @returns {{ kind: string, fields: {[name]: Object }} | {}}
+ */
 export function simplifyObjectType (type) {
   if (!type || type.kind !== 'OBJECT' || !Array.isArray(type.fields)) {
-    return null
+    return {}
   }
 
   const fields = {}
@@ -108,11 +97,16 @@ export function simplifyObjectType (type) {
   return { kind: OBJECT, fields }
 }
 
+/**
+ * Build a string representation of a GraphQL type
+ * @param type {{ kind: *, name: *, ofType: { kind: *, name: *, ofType: Object} }}
+ * @returns {string}
+ */
 export function buildTypeString (type) {
   if (!type) return '(unknown)' //
-  else if (type.kind === 'NON_NULL') { // noinspection JSUnresolvedReference
+  else if (type.kind === 'NON_NULL') {
     return `${buildTypeString(type.ofType)}!`
-  } else if (type.kind === 'LIST') { // noinspection JSUnresolvedReference
+  } else if (type.kind === 'LIST') {
     return `[${buildTypeString(type.ofType)}]`
   }
 
@@ -122,7 +116,7 @@ export function buildTypeString (type) {
 export function makeNode (typeName, argsDef = {}) {
   // Preselect required args (types ending with "!")
   const required = Object.entries(argsDef)
-    .filter(([, arg]) => arg.type?.endsWith('!'))
+    .filter(([, arg]) => arg.type.endsWith('!'))
     .map(([name]) => name)
 
   return {

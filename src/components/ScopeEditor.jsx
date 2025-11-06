@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+
 import { useEffect, useState } from 'react'
 import SearchAdd from './SearchAdd.jsx'
 import { makeNode } from '../utils.js'
@@ -34,10 +36,9 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
     (async () => {
       setType(await loadType(typeName))
     })()
-  }, [typeName]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [typeName])
 
-  // noinspection JSUnresolvedReference
-  if (!type || !type.fields) {
+  if (!type || !type?.fields) {
     return <div className="mt-3 text-xs text-gray-400">Loading {typeName}…</div>
   }
 
