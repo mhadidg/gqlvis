@@ -1,4 +1,4 @@
-function buildQuery (rootField, node, getType) {
+export default function buildQuery (rootField, node, getType) {
   const vars = collectVars(node, [])
   const varDecl = vars.length ? `(${vars.map(v => `$${v.name}: ${v.type}`).join(', ')})` : ''
 
@@ -77,5 +77,3 @@ function prettyPrint (src) {
 
   return out
 }
-
-export default buildQuery

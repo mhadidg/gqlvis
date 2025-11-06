@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import SearchAdd from './SearchAdd.jsx'
-import makeNode from '../make-node.js'
+import { makeNode } from '../utils.js'
 
 function clone (node) {
   return {

@@ -3,56 +3,20 @@
 import ScopeEditor from './components/ScopeEditor.jsx'
 import React from 'react'
 import LocalCache from './local-cache.js'
-import buildQuery from './query-builder.js'
-import makeNode from './make-node.js'
+import { gqlFetch, makeNode, simplifyObjectType } from './utils.js'
+import buildQuery from './gql-builder.js'
 
 const { useEffect, useMemo, useRef, useState } = React
 
-const SCALAR = 'SCALAR'
-const OBJECT = 'OBJECT'
-const LIST_SCALAR = 'LIST_SCALAR' // pseudo-kind
-const LIST_OBJECT = 'LIST_OBJECT' // pseudo-kind
+const DEFAULT_URL = 'https://countries.trevorblades.com/'
 
-async function gqlFetch (url, query, variables) {
-  const urlObj = new URL(url)
-  const headers = { 'content-type': 'application/json' }
-
-  if (urlObj.username) {
-    if (urlObj.username.toLowerCase() === 'bearer') {
-      headers.Authorization = `Bearer ${urlObj.password}`
-    } else {
-      const basic = btoa(`${urlObj.username}:${urlObj.password}`)
-      headers.Authorization = `Basic ${basic}`
-    }
-
-    // Clear username/password from URL
-    urlObj.username = ''
-    urlObj.password = ''
-  }
-
-  const res = await fetch(urlObj.toString(), {
-    method: 'POST', //
-    headers, //
-    body: JSON.stringify({ query, variables }),
-  })
-
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-
-  const json = await res.json()
-  if (json.errors) {
-    throw new Error(json.errors.map((e) => e.message).join('; '))
-  }
-
-  return json.data
-}
-
-const INTROSPECT_ROOT = /* GraphQL */ `
+const INTROSPECT_ROOT = `
   query __Root {
     __schema { queryType { name } }
   }
 `
 
-const INTROSPECT_TYPE = /* GraphQL */ `
+const INTROSPECT_TYPE = `
   query __Type($name: String!) {
     __type(name: $name) {
       kind
@@ -70,89 +34,6 @@ const INTROSPECT_TYPE = /* GraphQL */ `
     }
   }
 `
-
-// Unwrap a GraphQL type to its base type
-// Returns { namedKind, namedName, wrappers: ["NON_NULL"|"LIST", ...] }
-function unwrap (type) {
-  const wrappers = []
-  let cur = type
-  while (cur && (cur.kind === 'NON_NULL' || cur.kind === 'LIST')) {
-    wrappers.push(cur.kind)
-    // noinspection JSUnresolvedReference
-    cur = cur.ofType
-  }
-
-  return {
-    namedKind: cur?.kind, //
-    namedName: cur?.name, //
-    wrappers
-  }
-}
-
-// Build a simplified shape for a type
-//
-// {
-//   kind: 'OBJECT',
-//   fields: {
-//     {name}: {
-//       kind: 'SCALAR', // or 'OBJECT' or 'LIST_OBJECT'
-//       type: 'String', // depends on kind (scalar or object)
-//       description: String, // short desc of the field
-//       args: {
-//         {name}: {
-//           type: 'String', // or any other scalar types
-//           description: String, // short desc of the argument
-//         }
-//       }
-//     }
-//   }
-// }
-//
-function simplifyObjectType (__type) {
-  if (!__type || __type.kind !== 'OBJECT' || !Array.isArray(__type.fields)) {
-    return null
-  }
-
-  const fields = {}
-  __type.fields.forEach((field) => {
-    const unwrapped = unwrap(field.type)
-
-    let kind
-    if (unwrapped.namedKind === 'OBJECT') {
-      kind = unwrapped.wrappers.includes('LIST') ? LIST_OBJECT : OBJECT
-    } else {
-      kind = unwrapped.wrappers.includes('LIST') ? LIST_SCALAR : SCALAR
-    }
-
-    const args = {};
-    (field.args || []).forEach((arg) => {
-      args[arg.name] = {
-        type: buildTypeString(arg.type), //
-        description: arg.description
-      }
-    })
-
-    fields[field.name] = {
-      kind, //
-      type: unwrapped.namedName, //
-      description: field.description, //
-      args,
-    }
-  })
-
-  return { kind: OBJECT, fields }
-}
-
-function buildTypeString (type) {
-  if (!type) return '(unknown)' //
-  else if (type.kind === 'NON_NULL') { // noinspection JSUnresolvedReference
-    return `${buildTypeString(type.ofType)}!`
-  } else if (type.kind === 'LIST') { // noinspection JSUnresolvedReference
-    return `[${buildTypeString(type.ofType)}]`
-  }
-
-  return type.name || '(unknown)'
-}
 
 function useIntrospection (endpoint) {
   const [queryRootName, setQueryRootName] = useState({})
@@ -187,6 +68,7 @@ function useIntrospection (endpoint) {
 
       setQueryRootName({ name, endpoint })
     } catch (e) {
+      setQueryRootName({})
       setError(String(e))
     } finally {
       setLoading(false)
@@ -214,7 +96,7 @@ function useIntrospection (endpoint) {
 }
 
 function App () {
-  const [endpoint, setEndpoint] = useState('https://countries.trevorblades.com/')
+  const [endpoint, setEndpoint] = useState(DEFAULT_URL)
   const { queryRootName, loadRoot, loadType, getType, loading, error } = useIntrospection(endpoint)
 
   const [rootField, setRootField] = useState('')
@@ -310,7 +192,7 @@ function App () {
               }
             </select>
 
-            <span className="text-xs text-gray-500">(Query type: {queryRootName.name})</span>
+            <span className="text-xs text-gray-500">(Operation type: {queryRootName.name})</span>
           </div>
 
           {selection ? //
