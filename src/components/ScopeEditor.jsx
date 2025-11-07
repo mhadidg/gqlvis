@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import SearchAdd from './SearchAdd.jsx'
-import { makeNode } from '../utils.js'
+import { INLINE_FRAGMENT, INTERFACE, makeNode, OBJECT, SCALAR } from '../utils.js'
 
 function clone (node) {
   return {
     typeName: node.typeName,
+    typeKind: node.typeKind,
     argsDef: { ...node.argsDef },
     vars: new Set(node.vars),
     scalars: new Set(node.scalars),
@@ -30,7 +31,8 @@ function Chip ({ children, onRemove }) {
 
 function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
   const [type, setType] = useState()
-  const added = new Set(node.children.map((c) => c.field))
+  const addedChildren = new Set(node.children.filter((c) => c.kind !== INLINE_FRAGMENT).map((c) => c.field))
+  const addedFragments = new Set(node.children.filter((c) => c.kind === INLINE_FRAGMENT).map((c) => c.field))
 
   useEffect(() => {
     (async () => {
@@ -44,12 +46,12 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
 
   const scalarFields = //
     Object.entries(type.fields)
-      .filter(([, field]) => field.kind.includes('SCALAR'))
+      .filter(([, field]) => field.kind.includes(SCALAR))
       .map(([name, field]) => ({ name, description: field.description }))
 
   const objectFields = //
     Object.entries(type.fields)
-      .filter(([, field]) => field.kind.includes('OBJECT'))
+      .filter(([, field]) => field.kind.includes(OBJECT) || field.kind.includes(INTERFACE))
       .map(([name, field]) => ({
         name, //
         kind: field.kind, //
@@ -92,17 +94,16 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
   }
 
   const addChild = async (fieldName) => {
-    if (added.has(fieldName)) return
-
     const fieldDef = type.fields[fieldName]
-    if (!fieldDef) return
+    if (!fieldDef) throw new Error(`Field ${fieldName} not found in ${typeName}`)
 
-    await loadType(fieldDef.type) // load child type
+    const argsDef = fieldDef.args || {}
     const next = clone(node)
-    const childArgsDef = fieldDef.args || {}
 
     next.children = [...next.children, {
-      field: fieldName, kind: fieldDef.kind, node: makeNode(fieldDef.type, childArgsDef)
+      field: fieldName, //
+      kind: fieldDef.kind, //
+      node: makeNode(fieldDef.type, fieldDef.kind, argsDef) //
     }]
 
     onChange(next)
@@ -120,6 +121,18 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
   const removeChild = (idx) => {
     const next = clone(node)
     next.children = next.children.filter((_, i) => i !== idx)
+    onChange(next)
+  }
+
+  const addFragment = async (fragment) => {
+    const next = clone(node)
+
+    next.children = [...next.children, {
+      field: fragment.name, //
+      kind: INLINE_FRAGMENT, //
+      node: makeNode(fragment.name, fragment.kind, {}),
+    }]
+
     onChange(next)
   }
 
@@ -141,11 +154,11 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
       </div>
 
       {/* Arguments */}
-      <div className="mt-2">
+      <div className="mt-3">
         <div className="text-sm mb-1">Arguments</div>
         <SearchAdd placeholder="Type to search" options={argOptions} selected={node.vars} onSelect={addVar}/>
 
-        {node.vars.size > 0 && (
+        {node.vars.size > 0 && ( //
           <div className="mt-2 flex flex-wrap gap-2">
             {Array.from(node.vars).map((vari) => {
               const required = isRequiredArg(node, vari)
@@ -155,8 +168,7 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
                   {required && <span className="ml-1 text-[10px] text-gray-500" title="Required">req</span>}
                 </Chip>)
             })}
-          </div>
-        )}
+          </div>)}
       </div>
 
       {/* Scalar fields */}
@@ -164,21 +176,37 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
         <div className="text-sm mb-1">Scalar fields</div>
         <SearchAdd placeholder="Type to search" options={scalarFields} selected={node.scalars} onSelect={addField}/>
 
-        {node.scalars.size > 0 && (
+        {node.scalars.size > 0 && ( //
           <div className="mt-2 flex flex-wrap gap-2">
             {Array.from(node.scalars).map((field) => ( //
               <Chip key={field} onRemove={() => remField(field)}>{field}</Chip> //
             ))}
-          </div>
-        )}
+          </div>)}
       </div>
+
+      {/* Inline fragments */}
+      {type.possibleTypes?.length && (<div className="mt-3">
+        <div className="text-sm">Inline fragments</div>
+        <div className="mt-1 flex flex-wrap gap-2">
+          {type.possibleTypes?.map((fragment) => {
+            const isDisabled = addedFragments.has(fragment.name)
+            return ( //
+              <button
+                key={fragment.name}
+                disabled={isDisabled}
+                className={`rounded-full border px-2 py-1 text-sm ` + (isDisabled ? 'bg-gray-50' : 'hover:bg-gray-50')}
+                onClick={() => addFragment(fragment)}
+              >+ {fragment.name}</button>)
+          })}
+        </div>
+      </div>)}
 
       {/* Object fields */}
       <div className="mt-3">
         <div className="text-sm">Object fields</div>
         <div className="mt-1 flex flex-wrap gap-2">
           {objectFields.map((of) => { //
-            const isDisabled = added.has(of.name)
+            const isDisabled = addedChildren.has(of.name)
             return ( //
               <button
                 key={of.name}
@@ -188,7 +216,7 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
               >+ {of.name}</button>)
           })}
 
-          {!objectFields.length && <span className="text-xs text-gray-400">(no object/list fields)</span>}
+          {!objectFields.length && <span className="text-sm text-gray-400">(no object fields)</span>}
         </div>
       </div>
 

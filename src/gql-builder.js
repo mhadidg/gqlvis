@@ -1,3 +1,5 @@
+import { INLINE_FRAGMENT } from './utils.js'
+
 export default function buildQuery (rootField, node) {
   const vars = collectVars(node, [])
   const varDecl = vars.length ? `(${vars.map(v => `$${v.name}: ${v.type}`).join(', ')})` : ''
@@ -6,7 +8,7 @@ export default function buildQuery (rootField, node) {
     .map(arg => `${arg}: $${makeVarName([], arg)}`)
     .join(', ')
 
-  const fields = buildFields(node.typeName, node, [])
+  const fields = buildFields(node, [])
   return prettyPrint(`query${varDecl}{${rootField}${(args ? `(${args})` : '')}{${fields}}}`)
 }
 
@@ -25,20 +27,24 @@ function collectVars (node, path) {
 
 const makeVarName = (path, arg) => [...path, arg].join('_')
 
-function buildFields (typeName, node, path) {
+function buildFields (node, path) {
   const parts = []
   const defaultScalars = node.children.length ? [] : ['__typename']
   const scalars = node.scalars.size ? [...node.scalars] : defaultScalars
   if (scalars.length) parts.push(...scalars)
 
   for (const child of node.children) {
-    const childPath = [...path, child.field]
-    const childArgs = [...child.node.vars]
-      .map(arg => `${arg}: $${makeVarName(childPath, arg)}`)
-      .join(', ')
+    const inner = buildFields(child.node, path)
+    if (child.kind === INLINE_FRAGMENT) {
+      parts.push(`... on ${child.node.typeName}{${inner}}`)
+    } else {
+      const childPath = [...path, child.field]
+      const childArgs = [...child.node.vars]
+        .map(arg => `${arg}: $${makeVarName(childPath, arg)}`)
+        .join(', ')
 
-    const inner = buildFields(child.typeName, child.node, childPath)
-    parts.push(`${child.field}${childArgs ? `(${childArgs})` : ''}{${inner}}`)
+      parts.push(`${child.field}${childArgs ? `(${childArgs})` : ''}{${inner}}`)
+    }
   }
 
   return parts.join('|')

@@ -3,7 +3,7 @@
 import ScopeEditor from './components/ScopeEditor.jsx'
 import React from 'react'
 import LocalCache from './local-cache.js'
-import { gqlFetch, makeNode, simplifyObjectType } from './utils.js'
+import { gqlFetch, makeNode, OBJECT, simplifyObjectType } from './utils.js'
 import buildQuery from './gql-builder.js'
 
 const { useEffect, useMemo, useRef, useState } = React
@@ -11,13 +11,13 @@ const { useEffect, useMemo, useRef, useState } = React
 const DEFAULT_URL = 'https://countries.trevorblades.com/'
 
 const INTROSPECT_ROOT = `
-  query __Root {
+  query {
     __schema { queryType { name } }
   }
 `
 
 const INTROSPECT_TYPE = `
-  query __Type($name: String!) {
+  query ($name: String!) {
     __type(name: $name) {
       kind
       name
@@ -30,6 +30,10 @@ const INTROSPECT_TYPE = `
           description
           type { kind name ofType { kind name ofType { kind name ofType { kind name } } } }
         }
+      }
+      possibleTypes {
+        kind
+        name
       }
     }
   }
@@ -103,7 +107,7 @@ function App () {
   const selectableRootFields = (type) => {
     const TypeDef = getType(type)
     return Object.keys(TypeDef.fields)
-      .filter((field) => TypeDef.fields[field].kind.includes('OBJECT'))
+      .filter((field) => TypeDef.fields[field].kind.includes(OBJECT))
   }
 
   useEffect(() => {
@@ -127,8 +131,8 @@ function App () {
     const rootType = getType(queryRootName.name)
     if (!rootType) return
 
-    const rootDef = rootType.fields[rootField]
-    if (rootDef) setSelection(makeNode(rootDef.type, rootDef.args || {}))
+    const field = rootType.fields[rootField]
+    if (field) setSelection(makeNode(field.type, field.kind, field.args))
   }, [rootField])
 
   const graphQL = useMemo(() => {
