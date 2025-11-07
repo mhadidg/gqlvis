@@ -133,7 +133,7 @@ function App () {
 
   const graphQL = useMemo(() => {
     if (!selection || error) return ''
-    return buildQuery(rootField, selection, getType)
+    return buildQuery(rootField, selection)
   }, [selection, error])
 
   return ( //

@@ -1,4 +1,4 @@
-export default function buildQuery (rootField, node, getType) {
+export default function buildQuery (rootField, node) {
   const vars = collectVars(node, [])
   const varDecl = vars.length ? `(${vars.map(v => `$${v.name}: ${v.type}`).join(', ')})` : ''
 
@@ -6,7 +6,7 @@ export default function buildQuery (rootField, node, getType) {
     .map(arg => `${arg}: $${makeVarName([], arg)}`)
     .join(', ')
 
-  let fields = buildFields(getType, node.typeName, node, [])
+  const fields = buildFields(node.typeName, node, [])
   return prettyPrint(`query${varDecl}{${rootField}${(args ? `(${args})` : '')}{${fields}}}`)
 }
 
@@ -25,29 +25,21 @@ function collectVars (node, path) {
 
 const makeVarName = (path, arg) => [...path, arg].join('_')
 
-function buildFields (getType, typeName, node, path) {
-  const type = getType(typeName)
-  if (!type?.fields) return ''
-
+function buildFields (typeName, node, path) {
   const parts = []
-
-  const scalars = node.scalars.size ? [...node.scalars] : ['__typename']
-  parts.push(...scalars)
+  const defaultScalars = node.children.length ? [] : ['__typename']
+  const scalars = node.scalars.size ? [...node.scalars] : defaultScalars
+  if (scalars.length) parts.push(...scalars)
 
   for (const child of node.children) {
-    const def = type.fields[child.field]
-    if (!def) continue
-
     const childPath = [...path, child.field]
-    const args = [...child.node.vars]
+    const childArgs = [...child.node.vars]
       .map(arg => `${arg}: $${makeVarName(childPath, arg)}`)
       .join(', ')
 
-    const inner = buildFields(getType, def.type, child.node, childPath)
-    parts.push(`${child.field}${args ? `(${args})` : ''}{${inner}}`)
+    const inner = buildFields(child.typeName, child.node, childPath)
+    parts.push(`${child.field}${childArgs ? `(${childArgs})` : ''}{${inner}}`)
   }
-
-  parts.push()
 
   return parts.join('|')
 }
