@@ -33,6 +33,9 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
   const [type, setType] = useState()
   const addedChildren = new Set(node.children.filter((c) => c.kind !== INLINE_FRAGMENT).map((c) => c.field))
   const addedFragments = new Set(node.children.filter((c) => c.kind === INLINE_FRAGMENT).map((c) => c.field))
+  const [showAllObjects, setShowAllObjects] = useState(false)
+
+  useEffect(() => { setShowAllObjects(false) }, [typeName])
 
   useEffect(() => {
     (async () => {
@@ -63,6 +66,9 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
   const argOptions = //
     Object.entries(node.argsDef || {})
       .map(([name, arg]) => ({ name, description: arg.description }))
+
+  const visibleObjectFields = showAllObjects ? objectFields : objectFields.slice(0, 4)
+  const hiddenCount = Math.max(0, objectFields.length - 4)
 
   const addVar = (vari) => {
     const next = clone(node)
@@ -205,7 +211,7 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
       <div className="mt-3">
         <div className="text-sm">Object fields</div>
         <div className="mt-1 flex flex-wrap gap-2">
-          {objectFields.map((of) => { //
+          {visibleObjectFields.map((of) => { //
             const isDisabled = addedChildren.has(of.name)
             return ( //
               <button
@@ -216,8 +222,21 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
               >+ {of.name}</button>)
           })}
 
+          {hiddenCount > 0 && (
+            <button
+              className="text-sm text-gray-600 underline underline-offset-3"
+              onClick={() => setShowAllObjects(v => !v)}
+              aria-expanded={showAllObjects}
+              title={showAllObjects ? 'Collapse list' : 'Expand list'}
+            >
+              {showAllObjects ? 'show fewer' : `show more (${hiddenCount})`}
+            </button>
+          )}
+
           {!objectFields.length && <span className="text-sm text-gray-400">(no object fields)</span>}
         </div>
+
+
       </div>
 
       {!!node.children.length && ( //
