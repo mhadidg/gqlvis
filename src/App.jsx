@@ -112,6 +112,7 @@ function App () {
 
   useEffect(() => {
     (async () => {
+      setRootField('')
       if (!queryRootName.name) return
 
       const rootType = await loadType(queryRootName.name)
@@ -126,6 +127,7 @@ function App () {
   }, [queryRootName])
 
   useEffect(() => {
+    setSelection(null)
     if (!rootField) return
 
     const rootType = getType(queryRootName.name)
@@ -136,9 +138,9 @@ function App () {
   }, [rootField])
 
   const graphQL = useMemo(() => {
-    if (!selection || error) return ''
+    if (!selection) return ''
     return buildQuery(rootField, selection)
-  }, [selection, error])
+  }, [selection])
 
   return ( //
     <div className="mx-auto max-w-4xl p-4 text-gray-900">
