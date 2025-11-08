@@ -63,6 +63,13 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
         description: field.description
       }))
 
+  // Move selected ones to the front
+  objectFields.sort((a, b) => {
+    const aSel = addedChildren.has(a.name)
+    const bSel = addedChildren.has(b.name)
+    return (aSel === bSel) ? 0 : (aSel ? -1 : 1)
+  })
+
   const argOptions = //
     Object.entries(node.argsDef || {})
       .map(([name, arg]) => ({ name, description: arg.description }))
