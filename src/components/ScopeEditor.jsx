@@ -30,7 +30,8 @@ function Chip ({ children, onRemove }) {
 }
 
 function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
-  const [type, setType] = useState()
+  const [type, setType] = useState(null)
+  const [error, setError] = useState(null)
   const addedChildren = new Set(node.children.filter((c) => c.kind !== INLINE_FRAGMENT).map((c) => c.field))
   const addedFragments = new Set(node.children.filter((c) => c.kind === INLINE_FRAGMENT).map((c) => c.field))
   const [showAllObjects, setShowAllObjects] = useState(false)
@@ -39,11 +40,19 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
 
   useEffect(() => {
     (async () => {
-      setType(await loadType(typeName))
+      try {
+        setError(null)
+        setType(await loadType(typeName))
+      } catch (e) {
+        setError(e.message)
+        setType(null)
+      }
     })()
   }, [typeName])
 
-  if (!type || !type?.fields) {
+  if (error !== null) {
+    return <div className="mt-3 text-xs text-red-600">{error} (check DevTools)</div>
+  } else if (type === null) {
     return <div className="mt-3 text-xs text-gray-400">Loading {typeName}…</div>
   }
 
