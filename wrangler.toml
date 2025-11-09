@@ -1,0 +1,9 @@
+main = 'demo-api/worker.js'
+compatibility_date = "2025-10-09"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "your_kv_namespace_id"
+
+[observability.logs]
+enabled = true
