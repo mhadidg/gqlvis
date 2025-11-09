@@ -104,6 +104,14 @@ function App () {
   const [rootField, setRootField] = useState('')
   const [selection, setSelection] = useState(null)
 
+  // Auto-introspect demo endpoint
+  const didAutoIntrospect = React.useRef(false)
+  React.useEffect(() => {
+    if (didAutoIntrospect.current) return
+    didAutoIntrospect.current = true
+    loadRoot()
+  }, [])
+
   const selectableRootFields = (type) => {
     const TypeDef = getType(type)
     return Object.keys(TypeDef.fields)
