@@ -144,7 +144,7 @@ function App () {
 
   return ( //
     <div className="mx-auto max-w-4xl p-4 text-gray-900">
-      <h1 className="mb-3 text-2xl font-semibold">GraphQL Visual Builder</h1>
+      <h1 className="mb-3 text-xl">Build GraphQL queries visually, for any public API</h1>
 
       {/* Endpoint */}
       <div className="mb-4 rounded-xl border bg-white p-3">
@@ -158,7 +158,7 @@ function App () {
 
           <button
             type="button"
-            className="rounded border px-3 py-1 text-sm w-32 bg-gray-400 text-white font-medium disabled:opacity-50"
+            className="rounded border px-3 py-1 text-sm w-32 bg-gray-100 text-gray-900 disabled:opacity-50"
             onClick={() => loadRoot()}
             disabled={loading}
           >
@@ -167,9 +167,7 @@ function App () {
         </div>
 
         <div className="mt-2 text-xs text-gray-500">
-          You can pass auth info in the URL:<br/>
-          - Basic auth: <span className="font-mono">https://user:pass@example.com/graphql</span><br/>
-          - Bearer token: <span className="font-mono">https://bearer:TOKEN@example.com/graphql</span>
+          Basic auth supported (e.g, https://$user:$pass@...); bearer token via "bearer" user (https://bearer:$token@...)<br/>
         </div>
 
         <div className="mt-1 text-xs text-gray-500">
@@ -177,8 +175,8 @@ function App () {
           The app runs client-side only and doesn’t transmit data anywhere external.
         </div>
 
-        {loading && <div className="mt-2 text-xs text-gray-400">Loading schema…</div>}
-        {error && <div className="mt-2 text-xs text-red-600">{String(error)}</div>}
+        {loading && <div className="mt-2 text-xs text-gray-500">Loading schema…</div>}
+        {error && <div className="mt-2 text-xs text-red-500">{String(error)}</div>}
       </div>
 
       {/* Root chooser & scope */}
@@ -206,7 +204,7 @@ function App () {
                 node={selection}
                 onChange={setSelection}/> //
             ) : ( //
-              <div className="text-xs text-gray-400">Select a root field to begin.</div> //
+              <div className="text-xs text-gray-500">Select a root field to begin.</div> //
             )}
         </div>)}
 

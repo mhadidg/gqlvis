@@ -51,9 +51,9 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
   }, [typeName])
 
   if (error !== null) {
-    return <div className="mt-3 text-xs text-red-600">{error} (check DevTools)</div>
+    return <div className="mt-3 text-xs text-red-500">{error} (check DevTools)</div>
   } else if (type === null) {
-    return <div className="mt-3 text-xs text-gray-400">Loading {typeName}…</div>
+    return <div className="mt-3 text-xs text-gray-500">Loading {typeName}…</div>
   }
 
   const scalarFields = //
@@ -240,7 +240,7 @@ function ScopeEditor ({ loadType, typeName, node, onChange, onRemove }) {
 
           {hiddenCount > 0 && (
             <button
-              className="text-sm text-gray-600 underline underline-offset-3"
+              className="text-sm text-gray-500 underline underline-offset-4"
               onClick={() => setShowAllObjects(v => !v)}
               aria-expanded={showAllObjects}
               title={showAllObjects ? 'Collapse list' : 'Expand list'}
