@@ -25,7 +25,3 @@ dist-ssr
 
 # Repomix
 repomix-output.xml
-
-# Workers
-.wrangler
-.env
