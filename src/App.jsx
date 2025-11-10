@@ -151,78 +151,89 @@ function App () {
   }, [selection])
 
   return ( //
-    <div className="mx-auto max-w-4xl p-4 text-gray-900">
-      <h1 className="mb-3 text-xl">Build GraphQL queries visually, for any public API</h1>
+    <div className="min-h-screen flex flex-col mx-auto max-w-4xl p-4 text-gray-900">
+      <main className="flex-grow">
+        <h1 className="mb-3 text-center">(build GraphQL queries visually, for any public API)</h1>
 
-      {/* Endpoint */}
-      <div className="mb-4 rounded-xl border bg-white p-3">
-        <div className="mb-2 text-sm">GraphQL Endpoint</div>
-        <div className="flex gap-2">
-          <input
-            className="w-full rounded border px-2 py-1 text-sm"
-            value={endpoint}
-            onChange={(e) => setEndpoint(e.target.value)}
-            placeholder="https://your.graphql.endpoint/"/>
-
-          <button
-            type="button"
-            className="rounded border px-3 py-1 text-sm w-32 bg-gray-100 text-gray-900 disabled:opacity-50"
-            onClick={() => loadRoot()}
-            disabled={loading}
-          >
-            {loading ? 'Introspecting…' : 'Introspect'}
-          </button>
-        </div>
-
-        <div className="mt-2 text-xs text-gray-500">
-          Basic auth supported (e.g, https://$user:$pass@...); bearer token via "bearer" user (https://bearer:$token@...)<br/>
-        </div>
-
-        <div className="mt-1 text-xs text-gray-500">
-          ⚠️ Your URL (including auth info) never leaves your browser.
-          The app runs client-side only and doesn’t transmit data anywhere external.
-        </div>
-
-        {loading && <div className="mt-2 text-xs text-gray-500">Loading schema…</div>}
-        {error && <div className="mt-2 text-xs text-red-500">{String(error)}</div>}
-      </div>
-
-      {/* Root chooser & scope */}
-      {queryRootName.name && getType(queryRootName.name) && (//
+        {/* Endpoint */}
         <div className="mb-4 rounded-xl border bg-white p-3">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="text-sm">Root field:</span>
-            <select
-              className="rounded border px-2 py-1 text-sm"
-              value={rootField}
-              onChange={(e) => setRootField(e.target.value)}>
+          <div className="mb-2 text-sm">GraphQL Endpoint</div>
+          <div className="flex gap-2">
+            <input
+              className="w-full rounded border px-2 py-1 text-sm"
+              value={endpoint}
+              onChange={(e) => setEndpoint(e.target.value)}
+              placeholder="https://your.graphql.endpoint/"/>
 
-              {selectableRootFields(queryRootName.name) //
-                .map((field) => (<option key={field} value={field}>{field}</option>)) //
-              }
-            </select>
-
-            <span className="text-xs text-gray-500">(Operation type: {queryRootName.name})</span>
+            <button
+              type="button"
+              className="rounded border px-3 py-1 text-sm w-32 bg-gray-100 text-gray-900 disabled:opacity-50"
+              onClick={() => loadRoot()}
+              disabled={loading}
+            >
+              {loading ? 'Introspecting…' : 'Introspect'}
+            </button>
           </div>
 
-          {selection ? //
-            (<ScopeEditor
-                loadType={loadType}
-                typeName={selection?.typeName}
-                node={selection}
-                onChange={setSelection}/> //
-            ) : ( //
-              <div className="text-xs text-gray-500">Select a root field to begin.</div> //
-            )}
-        </div>)}
+          <div className="mt-2 text-xs text-gray-500">
+            Basic auth supported (e.g, https://$user:$pass@...); bearer token via "bearer" user
+            (https://bearer:$token@...)<br/>
+          </div>
 
-      {/* Output */}
-      {graphQL && ( //
-        <div className="mb-4 rounded-xl border bg-white p-3">
-          <div className="mb-2 text-sm">Query</div>
-          <pre
-            className="max-h-96 overflow-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs leading-relaxed">{graphQL}</pre>
-        </div>)}
+          <div className="mt-1 text-xs text-gray-500">
+            ⚠️ Your URL (including auth info) never leaves your browser.
+            The app runs client-side only and doesn’t transmit data anywhere external.
+          </div>
+
+          {loading && <div className="mt-2 text-xs text-gray-500">Loading schema…</div>}
+          {error && <div className="mt-2 text-xs text-red-500">{String(error)}</div>}
+        </div>
+
+        {/* Root chooser & scope */}
+        {queryRootName.name && getType(queryRootName.name) && (//
+          <div className="mb-4 rounded-xl border bg-white p-3">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className="text-sm">Root field:</span>
+              <select
+                className="rounded border px-2 py-1 text-sm"
+                value={rootField}
+                onChange={(e) => setRootField(e.target.value)}>
+
+                {selectableRootFields(queryRootName.name) //
+                  .map((field) => (<option key={field} value={field}>{field}</option>)) //
+                }
+              </select>
+
+              <span className="text-xs text-gray-500">(Operation type: {queryRootName.name})</span>
+            </div>
+
+            {selection ? //
+              (<ScopeEditor
+                  loadType={loadType}
+                  typeName={selection?.typeName}
+                  node={selection}
+                  onChange={setSelection}/> //
+              ) : ( //
+                <div className="text-xs text-gray-500">Select a root field to begin.</div> //
+              )}
+          </div>)}
+
+        {/* Output */}
+        {graphQL && ( //
+          <div className="mb-4 rounded-xl border bg-white p-3">
+            <div className="mb-2 text-sm">Query</div>
+            <pre
+              className="max-h-96 overflow-auto whitespace-pre-wrap rounded bg-gray-50 p-3 text-xs leading-relaxed">{graphQL}</pre>
+          </div>)}
+      </main>
+
+      <footer className="w-full border-t text-center text-gray-500 text-sm py-4">
+        <p>
+          <a href="https://hadid.dev/" className="underline text-blue-500">Author</a>
+          {' / '}
+          <a className="underline text-blue-500" href="https://github.com/mhadidg/gqlvis">Source code</a>
+        </p>
+      </footer>
     </div>)
 }
 
